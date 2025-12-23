@@ -50,6 +50,7 @@
     let filterStatus = 'all';
     let filterCategory = 'all';
     let showSuspicious = false;
+    let expandedCases = new Set(); // 펼쳐진 사례 ID 저장
     let newCase = {
       category: '문의',
       title: '',
@@ -318,6 +319,44 @@
       }
     }
 
+    // 내용 토글
+    function toggleContent(caseId) {
+      if (expandedCases.has(caseId)) {
+        expandedCases.delete(caseId);
+      } else {
+        expandedCases.add(caseId);
+      }
+      render();
+    }
+
+    // 내용 줄이기 (3줄 이상이면 자르기)
+    function truncateContent(content, caseId) {
+      const lines = content.split('\n');
+      const isExpanded = expandedCases.has(caseId);
+      
+      if (lines.length > 3 || content.length > 200) {
+        if (isExpanded) {
+          return `
+            <p class="text-gray-600 whitespace-pre-wrap mb-2">${content}</p>
+            <button onclick="toggleContent('${caseId}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+              접기 ▲
+            </button>
+          `;
+        } else {
+          const preview = lines.slice(0, 3).join('\n');
+          const shortPreview = preview.length > 200 ? preview.substring(0, 200) + '...' : preview;
+          return `
+            <p class="text-gray-600 whitespace-pre-wrap mb-2">${shortPreview}${lines.length > 3 ? '\n...' : ''}</p>
+            <button onclick="toggleContent('${caseId}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+              더보기 ▼
+            </button>
+          `;
+        }
+      } else {
+        return `<p class="text-gray-600 whitespace-pre-wrap mb-3">${content}</p>`;
+      }
+    }
+
     // 렌더링
     function render() {
       const root = document.getElementById('root');
@@ -564,7 +603,7 @@
                         </span>
                       </div>
                       <h3 class="text-lg font-bold text-gray-800 mb-2">${caseItem.title}</h3>
-                      <p class="text-gray-600 whitespace-pre-wrap mb-3">${caseItem.content}</p>
+                      ${truncateContent(caseItem.content, caseItem.id)}
                       
                       ${caseItem.contactName || caseItem.contactPhone || caseItem.contactEmail ? `
                         <div class="text-sm text-gray-500 space-y-1 mb-3">
@@ -724,6 +763,7 @@
     // 전역 함수로 등록
     window.handleUpdateStatus = handleUpdateStatus;
     window.handleDeleteCase = handleDeleteCase;
+    window.toggleContent = toggleContent;
 
     // 초기 렌더링
     render();
