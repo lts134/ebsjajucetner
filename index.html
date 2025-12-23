@@ -193,6 +193,7 @@
     function handleLogin(id, password) {
       if (id === adminAccount.id && password === adminAccount.password) {
         currentUser = adminAccount;
+        localStorage.setItem('csUser', JSON.stringify(adminAccount));
         loadCases();
         render();
         return;
@@ -201,6 +202,7 @@
       const center = centers.find(c => c.id === id && c.password === password);
       if (center) {
         currentUser = center;
+        localStorage.setItem('csUser', JSON.stringify(center));
         loadCases();
         render();
       } else {
@@ -212,6 +214,7 @@
     function handleLogout() {
       currentUser = null;
       showNewCase = false;
+      localStorage.removeItem('csUser');
       render();
     }
 
@@ -764,6 +767,18 @@
     window.handleUpdateStatus = handleUpdateStatus;
     window.handleDeleteCase = handleDeleteCase;
     window.toggleContent = toggleContent;
+
+    // 페이지 로드 시 저장된 로그인 정보 확인
+    const savedUser = localStorage.getItem('csUser');
+    if (savedUser) {
+      try {
+        currentUser = JSON.parse(savedUser);
+        loadCases();
+      } catch (error) {
+        console.error('저장된 로그인 정보 로드 실패:', error);
+        localStorage.removeItem('csUser');
+      }
+    }
 
     // 초기 렌더링
     render();
